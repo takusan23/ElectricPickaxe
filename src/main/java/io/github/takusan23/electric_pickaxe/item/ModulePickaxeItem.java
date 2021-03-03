@@ -4,19 +4,25 @@ import io.github.takusan23.electric_pickaxe.data.InstalledModule;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ArmorStandEntity;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.world.World;
-import net.minecraftforge.energy.CapabilityEnergy;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -53,17 +59,27 @@ public class ModulePickaxeItem extends PickaxeItem {
     }
 
     /**
-     * NBTを返す。
-     *
-     * @param itemStack アイテム
-     * @return CompoundNBT
-     */
-    private CompoundNBT getNBT(ItemStack itemStack) {
-        // 無ければ作成
-        if (itemStack.getTag() == null) {
-            itemStack.setTag(new CompoundNBT());
+     * 範囲攻撃モジュール
+     * */
+    public void rangeDamage(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+
+        // 範囲
+        double rangeValue = 10D;
+
+        // PlayerEntity.java 参照
+        float damage = getAttackDamage();
+        for (LivingEntity livingentity : attacker.world.getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(rangeValue, 0.25D, rangeValue))) {
+            // アーマースタンドを攻撃しないようになど
+            if (livingentity != target && !attacker.isOnSameTeam(livingentity) && (!(livingentity instanceof ArmorStandEntity) || !((ArmorStandEntity) livingentity).hasMarker())) {
+                // 敵対MOBのみ
+                if (livingentity instanceof MonsterEntity||livingentity instanceof SlimeEntity) {
+                    livingentity.applyKnockback(0.4F, (double) MathHelper.sin(attacker.rotationYaw * ((float) Math.PI / 180F)), (double) (-MathHelper.cos(attacker.rotationYaw * ((float) Math.PI / 180F))));
+                    livingentity.attackEntityFrom(DamageSource.causePlayerDamage((PlayerEntity) attacker), damage);
+                }
+            }
         }
-        return itemStack.getTag();
+        attacker.world.playSound((PlayerEntity) null, attacker.getPosX(), attacker.getPosY(), attacker.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, attacker.getSoundCategory(), 1.0F, 1.0F);
+        ((PlayerEntity) attacker).spawnSweepParticles();
     }
 
     /**
@@ -96,15 +112,22 @@ public class ModulePickaxeItem extends PickaxeItem {
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
-        // インストール済み表示する
-        addToolTip(stack, worldIn, tooltip, flagIn, "--- Installed Module ---", "#ffffff");
-        // インストール済みモジュールをずらーっと
-        getInstalledModuleList(stack).forEach(installedModule -> {
-            String toolTipText = String.format("%S / lv = %d", installedModule.getModuleRegistryId(), installedModule.getLevel());
-            addToolTip(stack, worldIn, tooltip, flagIn, toolTipText, "#ffff8b");
-        });
-        addToolTip(stack, worldIn, tooltip, flagIn, "---", "#ffffff");
+        // インストール済み配列
+        List<InstalledModule> installedModuleList = getInstalledModuleList(stack);
 
+        if (installedModuleList.isEmpty()) {
+            // ない場合は無いって出す
+            addToolTip(stack, worldIn, tooltip, flagIn, "--- Not found module ---", "#ffffff");
+        } else {
+            // インストール済み表示する
+            addToolTip(stack, worldIn, tooltip, flagIn, "--- Installed Module ---", "#ffffff");
+            // インストール済みモジュールをずらーっと
+            installedModuleList.forEach(installedModule -> {
+                String toolTipText = String.format("%S / Lv = %d", installedModule.getModuleRegistryId(), installedModule.getLevel());
+                addToolTip(stack, worldIn, tooltip, flagIn, toolTipText, "#ffff8b");
+            });
+            addToolTip(stack, worldIn, tooltip, flagIn, "---", "#ffffff");
+        }
     }
 
     /**

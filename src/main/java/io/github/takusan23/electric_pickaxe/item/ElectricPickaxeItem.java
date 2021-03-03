@@ -38,22 +38,16 @@ import java.util.List;
  * 参考コード。ありざいす
  * <p>
  * https://github.com/Ellpeck/ActuallyAdditions/blob/main/src/main/java/de/ellpeck/actuallyadditions/common/items/base/ItemEnergy.java
+ * <p>
+ * どうやら、EnergyStorage自体には電池残量保持機能はないのでNBTタグに書き込んでおく必要がある模様。
  */
-public class ElectricPickaxeItem extends ModulePickaxeItem implements ICapabilityProvider {
-
-    /**
-     * エネルギー関連
-     */
-    private EnergyStorage energyStorage;
-    private LazyOptional<EnergyStorage> lazyStorage;
+public class ElectricPickaxeItem extends ModulePickaxeItem {
 
     /**
      * コンストラクタ
      */
     public ElectricPickaxeItem(IItemTier tier, int attackDamageIn, float attackSpeedIn, Properties builder) {
         super(tier, attackDamageIn, attackSpeedIn, builder);
-        energyStorage = new EnergyStorage(100);
-        lazyStorage = LazyOptional.of(() -> energyStorage);
     }
 
     /**
@@ -74,7 +68,7 @@ public class ElectricPickaxeItem extends ModulePickaxeItem implements ICapabilit
         });
 
         // 継承元のメソッドを呼ぶ
-        super.addInformation(stack,worldIn,tooltip,flagIn);
+        super.addInformation(stack, worldIn, tooltip, flagIn);
     }
 
     /**
@@ -132,10 +126,11 @@ public class ElectricPickaxeItem extends ModulePickaxeItem implements ICapabilit
     @Override
     public boolean hitEntity(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         stack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
-            // 攻撃
-            stack.damageItem(0, attacker, (entity) -> {
-                entity.sendBreakAnimation(EquipmentSlotType.MAINHAND);
-            });
+            // 電池切れじゃなければ
+            if(cap.getEnergyStored() > 0) {
+                // 攻撃モジュール発動
+                rangeDamage(stack, target, attacker);
+            }
             // 電池減らす
             cap.extractEnergy(2, false);
         });
@@ -189,71 +184,69 @@ public class ElectricPickaxeItem extends ModulePickaxeItem implements ICapabilit
 
     /**
      * エネルギー追加のための何か
-     */
-    @Nonnull
-    @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
-        if (cap == CapabilityEnergy.ENERGY) {
-            return this.lazyStorage.cast();
-        }
-        return LazyOptional.empty();
-    }
-
-    /**
-     * エネルギー追加のための何か
-     */
-    @Nonnull
-    @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap) {
-        if (cap == CapabilityEnergy.ENERGY) {
-            return this.lazyStorage.cast();
-        }
-        return LazyOptional.empty();
-    }
-
-    /**
-     * エネルギー追加のための何か
      * <p>
      * 今回は {@link ICapabilityProvider} の実装をこのクラスで行ったため this を返す
      */
     @Nullable
     @Override
     public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundNBT nbt) {
-        return this;
+        return new EnergyCapabilityProvider(stack);
     }
 
-
+    /**
+     * Forge Energyよくわからん。よくわからんから他の人の参考にすっるわ
+     */
     private static class EnergyCapabilityProvider implements ICapabilityProvider {
 
-        public final CustomEnergyStorage storage;
-        private final LazyOptional<CustomEnergyStorage> lazyStorage;
+        public final NBTEnergyStorage storage;
+        private final LazyOptional<NBTEnergyStorage> lazyStorage;
 
-        public EnergyCapabilityProvider(final ItemStack stack, ElectricPickaxeItem item) {
-            this.storage = new CustomEnergyStorage(100) {
+        public EnergyCapabilityProvider(final ItemStack stack) {
+            this.storage = new NBTEnergyStorage(100) {
+                /**
+                 * getEnergyStored()が呼ばれたらNBTタグから取り出す
+                 * */
                 @Override
                 public int getEnergyStored() {
                     if (stack.hasTag()) {
-                        return stack.getOrCreateTag().getInt("Energy");
+                        return stack.getOrCreateTag().getInt("energy");
                     } else {
                         return 0;
                     }
                 }
+
+                /**
+                 * receiveEnergy()の時に内部で呼ばれる。残量をNBTタグに書き込む
+                 * */
                 @Override
                 public void setEnergyStored(int energy) {
-                    stack.getOrCreateTag().putInt("Energy", energy);
+                    stack.getOrCreateTag().putInt("energy", energy);
                 }
             };
-
             lazyStorage = LazyOptional.of(() -> this.storage);
         }
 
+        /**
+         * エネルギー追加のための何か
+         */
         @Nonnull
         @Override
         public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
             if (cap == CapabilityEnergy.ENERGY) {
                 return this.lazyStorage.cast();
             }
+            return LazyOptional.empty();
+        }
 
+        /**
+         * エネルギー追加のための何か
+         */
+        @Nonnull
+        @Override
+        public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap) {
+            if (cap == CapabilityEnergy.ENERGY) {
+                return this.lazyStorage.cast();
+            }
             return LazyOptional.empty();
         }
     }
