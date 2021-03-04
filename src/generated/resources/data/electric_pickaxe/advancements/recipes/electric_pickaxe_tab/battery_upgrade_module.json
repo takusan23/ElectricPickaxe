@@ -2,16 +2,16 @@
   "parent": "minecraft:recipes/root",
   "rewards": {
     "recipes": [
-      "electric_pickaxe:base_module"
+      "electric_pickaxe:battery_upgrade_module"
     ]
   },
   "criteria": {
-    "has_redstone": {
+    "has_base_module_item": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
-            "item": "minecraft:redstone"
+            "item": "electric_pickaxe:base_module"
           }
         ]
       }
@@ -19,13 +19,13 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "electric_pickaxe:base_module"
+        "recipe": "electric_pickaxe:battery_upgrade_module"
       }
     }
   },
   "requirements": [
     [
-      "has_redstone",
+      "has_base_module_item",
       "has_the_recipe"
     ]
   ]

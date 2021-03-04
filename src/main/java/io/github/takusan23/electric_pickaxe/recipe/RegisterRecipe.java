@@ -9,6 +9,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.stream.Collectors;
+
 
 /**
  * オリジナルレシピシステムを登録する。
@@ -25,6 +27,10 @@ public class RegisterRecipe {
      */
     public static final RegistryObject<SpecialRecipeSerializer<AddModuleRecipe>> CRAFTING_ADD_MODULE = CRAFTS.register("add_module", () -> new SpecialRecipeSerializer<>(AddModuleRecipe::new));
 
+    /**
+     * 各モジュールを作成するレシピ
+     */
+    public static final RegistryObject<SpecialRecipeSerializer<ModuleRecipe>> CRAFTING_MODULE_RECIPE = CRAFTS.register("module_recipe", () -> new SpecialRecipeSerializer<>(ModuleRecipe::new));
 
     public static void register(IEventBus modEventBus) {
         CRAFTS.register(FMLJavaModLoadingContext.get().getModEventBus());

@@ -11,10 +11,20 @@
       "item": "minecraft:iron_ingot"
     },
     {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:redstone"
+    },
+    {
+      "item": "minecraft:redstone"
+    },
+    {
       "item": "minecraft:redstone"
     }
   ],
   "result": {
-    "item": "electric_pickaxe:base_module"
+    "item": "electric_pickaxe:base_module",
+    "count": 3
   }
 }
