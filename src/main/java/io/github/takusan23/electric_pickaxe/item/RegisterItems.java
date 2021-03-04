@@ -22,7 +22,7 @@ public class RegisterItems {
 
     /**
      * クリエイティブタブ。
-     * */
+     */
     public static final ElectricPickaxeCreativeTab CREATIVE_TAB = new ElectricPickaxeCreativeTab();
 
     /**
@@ -32,13 +32,28 @@ public class RegisterItems {
 
     /**
      * ベースになるモジュール。こいつは特に一緒にクラフトしてインストールすることはないのでItemクラス
-     * */
+     */
     public static final RegistryObject<Item> BASE_MODULE_ITEM = ITEMS.register("base_module", () -> new Item(new Item.Properties().group(CREATIVE_TAB)));
 
     /**
      * シルクタッチ、幸運モジュール
      */
-    public static final RegistryObject<BaseModuleItem> SILK_TOUCH_FORTUNE_MODULE_ITEM = ITEMS.register("silk_touch_fortune_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB)));
+    public static final RegistryObject<BaseModuleItem> SILK_TOUCH_FORTUNE_MODULE_ITEM = ITEMS.register("silk_touch_fortune_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),"Max count 1"));
+
+    /**
+     * 範囲攻撃モジュール
+     */
+    public static final RegistryObject<BaseModuleItem> RANGE_ATTACK_MODULE_ITEM = ITEMS.register("range_attack_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),null));
+
+    /**
+     * 電池容量増加モジュール
+     */
+    public static final RegistryObject<BaseModuleItem> BATTERY_UPGRADE_MODULE_ITEM = ITEMS.register("battery_upgrade_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),null));
+
+    /**
+     * 攻撃力上昇モジュール
+     */
+    public static final RegistryObject<BaseModuleItem> DAMAGE_UPGRADE_MODULE_ITEM = ITEMS.register("damage_upgrade_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),"Need range attack module"));
 
     /**
      * アイテムを追加する

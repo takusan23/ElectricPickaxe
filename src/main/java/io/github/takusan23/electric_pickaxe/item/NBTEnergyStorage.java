@@ -6,8 +6,10 @@ import net.minecraftforge.energy.EnergyStorage;
  * {@link EnergyStorage}、もしかして：セーブして閉じたら消える？
  * <p>
  * というわけでNBTに書き込む
+ *
+ * ちなみにNBTに書き込んでいる実装は {@link ElectricPickaxeItem} を参照
  */
-public class NBTEnergyStorage extends EnergyStorage {
+public abstract class NBTEnergyStorage extends EnergyStorage {
     public NBTEnergyStorage(int capacity) {
         super(capacity);
     }
@@ -42,7 +44,7 @@ public class NBTEnergyStorage extends EnergyStorage {
 
     /**
      * 電力を消費したときに呼ばれる
-     * */
+     */
     @Override
     public int extractEnergy(int maxExtract, boolean simulate) {
         if (!this.canExtract()) {
@@ -61,5 +63,14 @@ public class NBTEnergyStorage extends EnergyStorage {
      */
     public void setEnergyStored(int energy) {
         this.energy = energy;
+    }
+
+
+    /**
+     * 出力量を変更する
+     */
+    public void setEnergyTransfer(int transfer) {
+        this.maxReceive = transfer;
+        this.maxExtract = transfer;
     }
 }

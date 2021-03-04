@@ -1,6 +1,5 @@
 package io.github.takusan23.electric_pickaxe.recipe;
 
-import io.github.takusan23.electric_pickaxe.ElectricPickaxe;
 import io.github.takusan23.electric_pickaxe.item.BaseModuleItem;
 import io.github.takusan23.electric_pickaxe.item.ElectricPickaxeItem;
 import io.github.takusan23.electric_pickaxe.item.RegisterItems;
@@ -9,13 +8,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.SpecialRecipe;
-import net.minecraft.item.crafting.SpecialRecipeSerializer;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-import javax.annotation.Nonnull;
+import java.util.ArrayList;
 
 /**
  * レシピシステムの実装
@@ -31,22 +27,21 @@ public class AddModuleRecipe extends SpecialRecipe {
      */
     @Override
     public boolean matches(CraftingInventory inv, World worldIn) {
-
-        System.out.println("-------------------------- matches -------------------------------");
-
         boolean hasElectricPickaxe = false;
         boolean hasModule = false;
 
         for (int j = 0; j < inv.getSizeInventory(); ++j) {
             ItemStack itemstack1 = inv.getStackInSlot(j);
             if (!itemstack1.isEmpty()) {
-                // ElectricPickaxeがあるか
                 if (itemstack1.getItem() == RegisterItems.ELECTRIC_PICKAXE_ITEM.get()) {
+                    // ElectricPickaxeがあるか
                     hasElectricPickaxe = true;
-                }
-                // モジュールがあるか
-                if (itemstack1.getItem() instanceof BaseModuleItem) {
+                } else if (itemstack1.getItem() instanceof BaseModuleItem) {
+                    // モジュールがあるか
                     hasModule = true;
+                } else if (itemstack1.getItem() != Items.AIR) {
+                    // その他上記＋空気以外が入ってきた場合はreturn
+                    return false;
                 }
             }
         }
@@ -61,12 +56,9 @@ public class AddModuleRecipe extends SpecialRecipe {
      */
     @Override
     public ItemStack getCraftingResult(CraftingInventory inv) {
-
-        System.out.println("-------------------------- getCraftingResult -------------------------------");
-
-
         ItemStack electricPickaxe = null;
-        ItemStack moduleItem = null;
+        // 複数インストール機能
+        ArrayList<ItemStack> moduleItemArrayList = new ArrayList<>();
 
         // ElectricPickaxeとモジュールを見つける
         for (int i = 0; i < inv.getSizeInventory(); i++) {
@@ -75,20 +67,27 @@ public class AddModuleRecipe extends SpecialRecipe {
                 electricPickaxe = itemStack;
             }
             if (itemStack.getItem() instanceof BaseModuleItem) {
-                moduleItem = itemStack;
+                moduleItemArrayList.add(itemStack);
             }
         }
 
         // なければreturn
-        if (electricPickaxe == null || moduleItem == null) return null;
+        if (electricPickaxe == null || moduleItemArrayList.isEmpty()) return null;
+
+        // これないとこのメソッドが呼ばれる度にクラフトしてないのにレベルが上がっていってしまう。
+        electricPickaxe = electricPickaxe.copy();
 
         // インストールメソッドを呼ぶ
         ElectricPickaxeItem electricPickaxeItem = (ElectricPickaxeItem) electricPickaxe.getItem();
-        BaseModuleItem baseModuleItem = (BaseModuleItem) moduleItem.getItem();
-        electricPickaxeItem.addModule(electricPickaxe, baseModuleItem);
+
+        ItemStack finalElectricPickaxe = electricPickaxe;
+        moduleItemArrayList.forEach(itemStack -> {
+            BaseModuleItem baseModuleItem = (BaseModuleItem) itemStack.getItem();
+            electricPickaxeItem.addModule(finalElectricPickaxe, baseModuleItem);
+        });
 
         // 返す。コピーを
-        return electricPickaxe.copy();
+        return electricPickaxe;
     }
 
     /**

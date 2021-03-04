@@ -1,14 +1,20 @@
 package io.github.takusan23.electric_pickaxe.item;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import io.github.takusan23.electric_pickaxe.data.InstalledModule;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
@@ -39,8 +45,15 @@ import java.util.stream.Collectors;
  */
 public class ModulePickaxeItem extends PickaxeItem {
 
+    /**
+     * 攻撃速度。getAttributeModifiers で道具の攻撃力等をかえすのに使ってる
+     */
+    private int attackSpeed = 0;
+
     public ModulePickaxeItem(IItemTier tier, int attackDamageIn, float attackSpeedIn, Properties builder) {
         super(tier, attackDamageIn, attackSpeedIn, builder);
+
+        this.attackSpeed = attackDamageIn;
     }
 
     /**
@@ -53,39 +66,42 @@ public class ModulePickaxeItem extends PickaxeItem {
         ItemStack itemStack = playerIn.getHeldItem(handIn);
 
         // エンチャントモジュール
-        applySilkFortuneModule(playerIn, itemStack);
+        changeSilkFortune(playerIn, itemStack);
 
         return ActionResult.resultSuccess(itemStack);
     }
 
     /**
-     * 範囲攻撃モジュール
-     * */
+     * 範囲攻撃モジュールの適用
+     * <p>
+     * hitEntityで呼んでな
+     */
     public void rangeDamage(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-
-        // 範囲
-        double rangeValue = 10D;
-
-        // PlayerEntity.java 参照
-        float damage = getAttackDamage();
-        for (LivingEntity livingentity : attacker.world.getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(rangeValue, 0.25D, rangeValue))) {
-            // アーマースタンドを攻撃しないようになど
-            if (livingentity != target && !attacker.isOnSameTeam(livingentity) && (!(livingentity instanceof ArmorStandEntity) || !((ArmorStandEntity) livingentity).hasMarker())) {
-                // 敵対MOBのみ
-                if (livingentity instanceof MonsterEntity||livingentity instanceof SlimeEntity) {
-                    livingentity.applyKnockback(0.4F, (double) MathHelper.sin(attacker.rotationYaw * ((float) Math.PI / 180F)), (double) (-MathHelper.cos(attacker.rotationYaw * ((float) Math.PI / 180F))));
-                    livingentity.attackEntityFrom(DamageSource.causePlayerDamage((PlayerEntity) attacker), damage);
+        // レベル（範囲）
+        double rangeValue = getModuleLevel(stack, RegisterItems.DAMAGE_UPGRADE_MODULE_ITEM.get().getRegistryNameString());
+        // インストール済みの場合のみ
+        if (rangeValue > 0) {
+            // PlayerEntity.java 参照
+            float damage = getAttackDamageFromModuleLevel(stack);
+            for (LivingEntity livingentity : attacker.world.getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(rangeValue, 0.25D, rangeValue))) {
+                // アーマースタンドを攻撃しないようになど
+                if (livingentity != target && !attacker.isOnSameTeam(livingentity) && (!(livingentity instanceof ArmorStandEntity) || !((ArmorStandEntity) livingentity).hasMarker())) {
+                    // 敵対MOBのみ
+                    if (livingentity instanceof MonsterEntity || livingentity instanceof SlimeEntity) {
+                        livingentity.applyKnockback(0.4F, (double) MathHelper.sin(attacker.rotationYaw * ((float) Math.PI / 180F)), (double) (-MathHelper.cos(attacker.rotationYaw * ((float) Math.PI / 180F))));
+                        livingentity.attackEntityFrom(DamageSource.causePlayerDamage((PlayerEntity) attacker), damage);
+                    }
                 }
             }
+            attacker.world.playSound(null, attacker.getPosX(), attacker.getPosY(), attacker.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, attacker.getSoundCategory(), 1.0F, 1.0F);
+            ((PlayerEntity) attacker).spawnSweepParticles();
         }
-        attacker.world.playSound((PlayerEntity) null, attacker.getPosX(), attacker.getPosY(), attacker.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, attacker.getSoundCategory(), 1.0F, 1.0F);
-        ((PlayerEntity) attacker).spawnSweepParticles();
     }
 
     /**
      * シルクタッチ、幸運エンチャントのモジュールを適用する
      */
-    private void applySilkFortuneModule(PlayerEntity playerEntity, ItemStack itemStack) {
+    private void changeSilkFortune(PlayerEntity playerEntity, ItemStack itemStack) {
         // モジュールがあるときのみ
         if (isCheckInstalledModule(itemStack, RegisterItems.SILK_TOUCH_FORTUNE_MODULE_ITEM.get().getRegistryNameString())) {
             // しゃがんでいるとき
@@ -137,6 +153,37 @@ public class ModulePickaxeItem extends PickaxeItem {
         StringTextComponent batteryLevelTextComponent = new StringTextComponent(text);
         batteryLevelTextComponent.setStyle(Style.EMPTY.setColor(Color.fromHex(textColor)));
         tooltip.add(batteryLevelTextComponent);
+    }
+
+    /**
+     * 攻撃力を現在のモジュール数に合わせて変更する
+     */
+    public float getAttackDamageFromModuleLevel(ItemStack stack) {
+        int level = getModuleLevel(stack, RegisterItems.DAMAGE_UPGRADE_MODULE_ITEM.get().getRegistryNameString());
+        if (level > 0) {
+            return getAttackDamage() + level;
+        } else {
+            return getAttackDamage();
+        }
+    }
+
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot) {
+        return super.getAttributeModifiers(equipmentSlot);
+    }
+
+    /**
+     * 攻撃力等を返す。
+     * */
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType slot, ItemStack stack) {
+        if (slot == EquipmentSlotType.MAINHAND) {
+            // メインハンドのみ
+            ImmutableMultimap.Builder<Attribute, AttributeModifier> attributeAttributeModifierBuilder = ImmutableMultimap.builder();
+            attributeAttributeModifierBuilder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Tool modifier", (double) getAttackDamageFromModuleLevel(stack), AttributeModifier.Operation.ADDITION));
+            attributeAttributeModifierBuilder.put(Attributes.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED_MODIFIER, "Tool modifier", (double) attackSpeed, AttributeModifier.Operation.ADDITION));
+            return attributeAttributeModifierBuilder.build();
+        } else return super.getAttributeModifiers(slot, stack);
     }
 
     /**

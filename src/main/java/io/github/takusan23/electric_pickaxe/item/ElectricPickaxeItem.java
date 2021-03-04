@@ -44,6 +44,11 @@ import java.util.List;
 public class ElectricPickaxeItem extends ModulePickaxeItem {
 
     /**
+     * 電気の供給方法がない場合はtrueにすることで右クリックで充電ができます
+     */
+    private boolean DEBUG_IS_CLICK_CHARGE = true;
+
+    /**
      * コンストラクタ
      */
     public ElectricPickaxeItem(IItemTier tier, int attackDamageIn, float attackSpeedIn, Properties builder) {
@@ -62,7 +67,8 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
             tooltip.add(toolDescriptionTextComponent);
 
             // 電池残量
-            StringTextComponent batteryLevelTextComponent = new StringTextComponent(String.format("Forge Energy %s/%s ", format.format(cap.getEnergyStored()), format.format(cap.getMaxEnergyStored())));
+            int percent = (int) ((cap.getEnergyStored() / new Float(cap.getMaxEnergyStored())) * 100);
+            StringTextComponent batteryLevelTextComponent = new StringTextComponent(String.format("Forge Energy %d/%d (%d %%)", cap.getEnergyStored(), cap.getMaxEnergyStored(), percent));
             batteryLevelTextComponent.setStyle(Style.EMPTY.setColor(Color.fromHex("#8cf4e2")));
             tooltip.add(batteryLevelTextComponent);
         });
@@ -76,9 +82,11 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
      */
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
-        context.getItem().getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
-            cap.receiveEnergy(5, false);
-        });
+        if(DEBUG_IS_CLICK_CHARGE){
+            context.getItem().getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
+                cap.receiveEnergy(5, false);
+            });
+        }
         return ActionResultType.SUCCESS;
     }
 
@@ -127,7 +135,7 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
     public boolean hitEntity(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         stack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
             // 電池切れじゃなければ
-            if(cap.getEnergyStored() > 0) {
+            if (cap.getEnergyStored() > 0) {
                 // 攻撃モジュール発動
                 rangeDamage(stack, target, attacker);
             }
@@ -202,7 +210,8 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
         private final LazyOptional<NBTEnergyStorage> lazyStorage;
 
         public EnergyCapabilityProvider(final ItemStack stack) {
-            this.storage = new NBTEnergyStorage(100) {
+            // 電池容量（未アップグレード時）は1000
+            this.storage = new NBTEnergyStorage(1000) {
                 /**
                  * getEnergyStored()が呼ばれたらNBTタグから取り出す
                  * */
@@ -221,6 +230,28 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
                 @Override
                 public void setEnergyStored(int energy) {
                     stack.getOrCreateTag().putInt("energy", energy);
+                }
+
+                /**
+                 * 電池容量を返す
+                 * */
+                @Override
+                public int getMaxEnergyStored() {
+                    int defaultCapacity = 1000;
+                    // 電池容量上昇モジュールの数
+                    ElectricPickaxeItem item = (ElectricPickaxeItem) stack.getItem();
+                    int batteryUpgradeLevel = item.getModuleLevel(stack, RegisterItems.BATTERY_UPGRADE_MODULE_ITEM.get().getRegistryNameString());
+                    // 1モジュールで100増える
+                    if (batteryUpgradeLevel > 0) {
+                        defaultCapacity += batteryUpgradeLevel * 100;
+                    }
+                    // ついでに充電速度も上げとく
+                    if (batteryUpgradeLevel > 0) {
+                        this.maxExtract += batteryUpgradeLevel * 10;
+                        this.maxReceive += batteryUpgradeLevel * 10;
+                    }
+                    this.capacity = defaultCapacity;
+                    return defaultCapacity;
                 }
             };
             lazyStorage = LazyOptional.of(() -> this.storage);
