@@ -46,7 +46,7 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
     /**
      * 電気の供給方法がない場合はtrueにすることで右クリックで充電ができます
      */
-    private boolean DEBUG_IS_CLICK_CHARGE = true;
+    private boolean DEBUG_IS_CLICK_CHARGE = false;
 
     /**
      * コンストラクタ
@@ -68,7 +68,7 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
 
             // 電池残量
             String localizeBatteryLevelText = getLocalizationText("tooltip.forge_energy");
-            int percent = (int) ((cap.getEnergyStored() / new Float(cap.getMaxEnergyStored())) * 100);
+            int percent = (int) ((cap.getEnergyStored() / (float) cap.getMaxEnergyStored()) * 100);
             StringTextComponent batteryLevelTextComponent = new StringTextComponent(String.format("%s %d/%d (%d %%)", localizeBatteryLevelText, cap.getEnergyStored(), cap.getMaxEnergyStored(), percent));
             batteryLevelTextComponent.setStyle(Style.EMPTY.setColor(Color.fromHex("#8cf4e2")));
             tooltip.add(batteryLevelTextComponent);
@@ -88,6 +88,7 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
                 cap.receiveEnergy(5, false);
             });
         }
+        super.onItemUse(context);
         return ActionResultType.SUCCESS;
     }
 

@@ -6,12 +6,12 @@
     ]
   },
   "criteria": {
-    "has_base_module_item": {
+    "has_redstone": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
-            "item": "electric_pickaxe:base_module"
+            "item": "minecraft:diamond"
           }
         ]
       }
@@ -25,7 +25,7 @@
   },
   "requirements": [
     [
-      "has_base_module_item",
+      "has_redstone",
       "has_the_recipe"
     ]
   ]

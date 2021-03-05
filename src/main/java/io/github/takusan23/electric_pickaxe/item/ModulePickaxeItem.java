@@ -2,7 +2,6 @@ package io.github.takusan23.electric_pickaxe.item;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.sun.java.accessibility.util.java.awt.TextComponentTranslator;
 import io.github.takusan23.electric_pickaxe.data.InstalledModule;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -27,8 +26,6 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.*;
 import net.minecraft.world.World;
-import net.minecraftforge.common.data.LanguageProvider;
-import net.minecraftforge.fml.loading.LanguageLoadingProvider;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
