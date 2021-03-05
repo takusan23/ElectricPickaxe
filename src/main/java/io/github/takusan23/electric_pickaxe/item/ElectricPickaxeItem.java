@@ -247,11 +247,6 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
                     if (batteryUpgradeLevel > 0) {
                         defaultCapacity += batteryUpgradeLevel * 100;
                     }
-                    // ついでに充電速度も上げとく
-                    if (batteryUpgradeLevel > 0) {
-                        this.maxExtract += batteryUpgradeLevel * 10;
-                        this.maxReceive += batteryUpgradeLevel * 10;
-                    }
                     this.capacity = defaultCapacity;
                     return defaultCapacity;
                 }

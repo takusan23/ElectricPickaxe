@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RRR",
+    "RMR",
+    "RRR"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "M": {
+      "item": "electric_pickaxe:base_module"
+    }
+  },
+  "result": {
+    "item": "electric_pickaxe:battery_upgrade_module"
+  }
+}

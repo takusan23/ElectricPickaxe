@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "electric_pickaxe:range_attack_module"
+    ]
+  },
+  "criteria": {
+    "has_base_module": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "electric_pickaxe:base_module"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "electric_pickaxe:range_attack_module"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_base_module",
+      "has_the_recipe"
+    ]
+  ]
+}

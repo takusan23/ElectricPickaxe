@@ -35,7 +35,7 @@ public abstract class NBTEnergyStorage extends EnergyStorage {
             return 0;
         }
         int energy = this.getEnergyStored();
-        int energyReceived = Math.min(this.capacity - energy, Math.min(this.maxReceive, maxReceive));
+        int energyReceived = Math.min(getMaxEnergyStored() - energy, Math.min(this.maxReceive, maxReceive));
         if (!simulate) {
             setEnergyStored(energy + energyReceived);
         }

@@ -75,7 +75,7 @@ public class ModulePickaxeItem extends PickaxeItem {
      */
     public void rangeDamage(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         // レベル（範囲）
-        double rangeValue = getModuleLevel(stack, RegisterItems.DAMAGE_UPGRADE_MODULE_ITEM.get().getRegistryNameString());
+        double rangeValue = getModuleLevel(stack, RegisterItems.RANGE_ATTACK_MODULE_ITEM.get().getRegistryNameString());
         // インストール済みの場合のみ
         if (rangeValue > 0) {
             // PlayerEntity.java 参照

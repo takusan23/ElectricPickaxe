@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "electric_pickaxe:electric_pickaxe"
+    ]
+  },
+  "criteria": {
+    "has_diamond_pickaxe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "minecraft:diamond_pickaxe"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "electric_pickaxe:electric_pickaxe"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_diamond_pickaxe",
+      "has_the_recipe"
+    ]
+  ]
+}
