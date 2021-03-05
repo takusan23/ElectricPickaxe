@@ -63,12 +63,13 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
         stack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
             NumberFormat format = NumberFormat.getInstance();
             // ツールの説明
-            StringTextComponent toolDescriptionTextComponent = new StringTextComponent("Shovel + Pickaxe + Axe");
+            StringTextComponent toolDescriptionTextComponent = new StringTextComponent(getLocalizationText("tooltip.item_description"));
             tooltip.add(toolDescriptionTextComponent);
 
             // 電池残量
+            String localizeBatteryLevelText = getLocalizationText("tooltip.forge_energy");
             int percent = (int) ((cap.getEnergyStored() / new Float(cap.getMaxEnergyStored())) * 100);
-            StringTextComponent batteryLevelTextComponent = new StringTextComponent(String.format("Forge Energy %d/%d (%d %%)", cap.getEnergyStored(), cap.getMaxEnergyStored(), percent));
+            StringTextComponent batteryLevelTextComponent = new StringTextComponent(String.format("%s %d/%d (%d %%)", localizeBatteryLevelText, cap.getEnergyStored(), cap.getMaxEnergyStored(), percent));
             batteryLevelTextComponent.setStyle(Style.EMPTY.setColor(Color.fromHex("#8cf4e2")));
             tooltip.add(batteryLevelTextComponent);
         });
@@ -82,7 +83,7 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
      */
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
-        if(DEBUG_IS_CLICK_CHARGE){
+        if (DEBUG_IS_CLICK_CHARGE) {
             context.getItem().getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
                 cap.receiveEnergy(5, false);
             });

@@ -2,6 +2,7 @@ package io.github.takusan23.electric_pickaxe.item;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.sun.java.accessibility.util.java.awt.TextComponentTranslator;
 import io.github.takusan23.electric_pickaxe.data.InstalledModule;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -24,11 +25,10 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.util.text.*;
 import net.minecraft.world.World;
+import net.minecraftforge.common.data.LanguageProvider;
+import net.minecraftforge.fml.loading.LanguageLoadingProvider;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -133,13 +133,17 @@ public class ModulePickaxeItem extends PickaxeItem {
 
         if (installedModuleList.isEmpty()) {
             // ない場合は無いって出す
-            addToolTip(stack, worldIn, tooltip, flagIn, "--- Not found module ---", "#ffffff");
+            String localizeNotFoundText = getLocalizationText("tooltip.not_found_module");
+            addToolTip(stack, worldIn, tooltip, flagIn, String.format("--- %s ---", localizeNotFoundText), "#ffffff");
         } else {
             // インストール済み表示する
-            addToolTip(stack, worldIn, tooltip, flagIn, "--- Installed Module ---", "#ffffff");
+            String localizeInstalledModule = getLocalizationText("tooltip.installed_module");
+            addToolTip(stack, worldIn, tooltip, flagIn, String.format("--- %s ---", localizeInstalledModule), "#ffffff");
             // インストール済みモジュールをずらーっと
             installedModuleList.forEach(installedModule -> {
-                String toolTipText = String.format("%S / Lv = %d", installedModule.getModuleRegistryId(), installedModule.getLevel());
+                // InstalledModule#getRegistryName()はアイテムのレジストリ名を返す　ということは　翻訳がそのまま使える
+                String localizedModuleName = installedModule.getLocalizationDisplayName();
+                String toolTipText = String.format("%S / Lv = %d", localizedModuleName, installedModule.getLevel());
                 addToolTip(stack, worldIn, tooltip, flagIn, toolTipText, "#ffff8b");
             });
             addToolTip(stack, worldIn, tooltip, flagIn, "---", "#ffffff");
@@ -174,7 +178,7 @@ public class ModulePickaxeItem extends PickaxeItem {
 
     /**
      * 攻撃力等を返す。
-     * */
+     */
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType slot, ItemStack stack) {
         if (slot == EquipmentSlotType.MAINHAND) {
@@ -264,6 +268,15 @@ public class ModulePickaxeItem extends PickaxeItem {
      */
     public boolean isCheckInstalledModule(ItemStack itemStack, String moduleRegistryName) {
         return getModuleLevel(itemStack, moduleRegistryName) != -1;
+    }
+
+    /**
+     * ローカライズテキストを返す
+     *
+     * @param localizeKey item.なんとか みたいな
+     */
+    public String getLocalizationText(String localizeKey) {
+        return new TranslationTextComponent(localizeKey).getString();
     }
 
 }

@@ -1,5 +1,7 @@
 package io.github.takusan23.electric_pickaxe;
 
+import io.github.takusan23.electric_pickaxe.generator.EnLanguageGenerator;
+import io.github.takusan23.electric_pickaxe.generator.JaLanguageGenerator;
 import io.github.takusan23.electric_pickaxe.generator.RecipeGenerator;
 import io.github.takusan23.electric_pickaxe.item.RegisterItems;
 import io.github.takusan23.electric_pickaxe.recipe.RegisterRecipe;
@@ -39,6 +41,13 @@ public class ElectricPickaxe {
      */
     private void registerProviders(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
+        if (event.includeClient()) {
+            /**
+             * 翻訳JSONファイル生成
+             * */
+            generator.addProvider(new EnLanguageGenerator(generator, MOD_ID));
+            generator.addProvider(new JaLanguageGenerator(generator, MOD_ID));
+        }
         if (event.includeServer()) {
             /**
              * レシピ生成クラス(レシピJSON生成)

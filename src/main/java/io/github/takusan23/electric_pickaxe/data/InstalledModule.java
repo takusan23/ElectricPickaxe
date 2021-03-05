@@ -1,5 +1,7 @@
 package io.github.takusan23.electric_pickaxe.data;
 
+import net.minecraft.util.text.TranslationTextComponent;
+
 /**
  * インストール済みモジュールのデータクラス
  * <p>
@@ -30,7 +32,14 @@ public class InstalledModule {
      * 名前を返す。モジュールのアイテムIDが帰ってくると思う
      */
     public String getModuleRegistryId() {
-        return moduleRegistryId;
+        return  moduleRegistryId;
+    }
+
+    /**
+     * ja_jp.json等でローカライズした値を返す
+     * */
+    public String getLocalizationDisplayName(){
+        return new TranslationTextComponent((getModuleRegistryId())).getString();
     }
 
     public void setModuleRegistryId(String moduleRegistryId) {

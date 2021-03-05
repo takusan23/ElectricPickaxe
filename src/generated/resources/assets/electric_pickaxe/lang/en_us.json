@@ -1,0 +1,14 @@
+{
+  "item.electric_pickaxe.base_module": "Base Module",
+  "item.electric_pickaxe.battery_upgrade_module": "Battery Upgrade Module",
+  "item.electric_pickaxe.damage_upgrade_module": "Damage Upgrade Module",
+  "item.electric_pickaxe.electric_pickaxe": "Electric Pickaxe",
+  "item.electric_pickaxe.range_attack_module": "Range Attack Module",
+  "item.electric_pickaxe.silk_touch_fortune_module": "SilkTouch Fortune Module",
+  "itemGroup.electric_pickaxe_tab": "Electric Pickaxe",
+  "tooltip.forge_energy": "Forge Energy",
+  "tooltip.installed_module": "Installed modules",
+  "tooltip.item_description": "Shovel + Pickaxe + Axe",
+  "tooltip.max_count": "Maximum loading capacity is 1",
+  "tooltip.not_found_module": "No installed modules"
+}

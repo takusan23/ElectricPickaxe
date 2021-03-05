@@ -38,7 +38,7 @@ public class RegisterItems {
     /**
      * シルクタッチ、幸運モジュール
      */
-    public static final RegistryObject<BaseModuleItem> SILK_TOUCH_FORTUNE_MODULE_ITEM = ITEMS.register("silk_touch_fortune_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),"Max count 1"));
+    public static final RegistryObject<BaseModuleItem> SILK_TOUCH_FORTUNE_MODULE_ITEM = ITEMS.register("silk_touch_fortune_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),true));
 
     /**
      * 範囲攻撃モジュール
@@ -53,7 +53,7 @@ public class RegisterItems {
     /**
      * 攻撃力上昇モジュール
      */
-    public static final RegistryObject<BaseModuleItem> DAMAGE_UPGRADE_MODULE_ITEM = ITEMS.register("damage_upgrade_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),"Need range attack module"));
+    public static final RegistryObject<BaseModuleItem> DAMAGE_UPGRADE_MODULE_ITEM = ITEMS.register("damage_upgrade_module", () -> new BaseModuleItem(new Item.Properties().group(CREATIVE_TAB),null));
 
     /**
      * アイテムを追加する

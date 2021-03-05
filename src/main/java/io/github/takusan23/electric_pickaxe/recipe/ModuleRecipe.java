@@ -92,7 +92,6 @@ public class ModuleRecipe extends SpecialRecipe {
         int potionCount = 0;
         for (ItemStack itemStack : craftingItemList) {
             List<EffectInstance> potionEffect = PotionUtils.getEffectsFromStack(itemStack);
-            System.out.println(potionEffect);
             for (EffectInstance effect : potionEffect) {
                 if (effect.getPotion() == Effects.STRENGTH) {
                     potionCount++;
