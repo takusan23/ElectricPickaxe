@@ -12,6 +12,7 @@ import net.minecraft.item.crafting.SpecialRecipe;
 import net.minecraft.potion.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import org.jline.builtins.TTop;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,16 +36,56 @@ public class ModuleRecipe extends SpecialRecipe {
     public boolean matches(CraftingInventory inv, World worldIn) {
         boolean hasModule = false;
 
+        // モジュール以外のアイテム
+        ArrayList<ItemStack> craftingItemList = new ArrayList<>();
+
         for (int j = 0; j < inv.getSizeInventory(); ++j) {
             ItemStack itemstack1 = inv.getStackInSlot(j);
             if (!itemstack1.isEmpty()) {
                 if (itemstack1.getItem() == RegisterItems.BASE_MODULE_ITEM.get()) {
                     hasModule = true;
                 }
+                if (itemstack1.getItem() != Items.AIR) {
+                    craftingItemList.add(itemstack1);
+                }
             }
         }
 
-        return hasModule;
+        // 無ければreturn
+        if (!hasModule || craftingItemList.isEmpty()) return false;
+
+        boolean hasSilkTouch = false;
+        boolean hasFortune = false;
+        // 幸運とシルクタッチがあれば
+        for (ItemStack itemStack : craftingItemList) {
+            if (EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack) == 1) {
+                hasSilkTouch = true;
+            }
+            if (EnchantmentHelper.getEnchantmentLevel(Enchantments.FORTUNE, itemStack) == 3) {
+                hasFortune = true;
+            }
+        }
+        // シルクタッチ、幸運モジュールがある場合
+        if (hasSilkTouch && hasFortune) {
+            return true;
+        }
+
+        // 攻撃力上昇ポーションを三つあれば作成可能
+        int potionCount = 0;
+        for (ItemStack itemStack : craftingItemList) {
+            List<EffectInstance> potionEffect = PotionUtils.getEffectsFromStack(itemStack);
+            for (EffectInstance effect : potionEffect) {
+                if (effect.getPotion() == Effects.STRENGTH) {
+                    potionCount++;
+                }
+            }
+        }
+        // 攻撃力上昇モジュールを返す
+        if (potionCount == 3) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

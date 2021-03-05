@@ -35,7 +35,7 @@ public class RecipeGenerator extends RecipeProvider {
                 .patternLine("SPA")
                 .patternLine("IRI")
                 .patternLine("IRI")
-                .addCriterion("has_diamond_pickaxe", hasItem(Items.DIAMOND_PICKAXE))
+                .addCriterion("has_diamond_pickaxe", hasItem(Items.DIAMOND_PICKAXE)) // レシピ解放？
                 .build(consumer);
 
         // BaseModule。不定形
@@ -53,7 +53,7 @@ public class RecipeGenerator extends RecipeProvider {
                 .patternLine("RRR")
                 .patternLine("RMR")
                 .patternLine("RRR")
-                .addCriterion("has_redstone", hasItem(Items.DIAMOND))
+                .addCriterion("has_base_module", hasItem(RegisterItems.BASE_MODULE_ITEM.get())) // レシピ解放？
                 .build(consumer);
 
         // RangeAttackModule
@@ -65,7 +65,7 @@ public class RecipeGenerator extends RecipeProvider {
                 .addIngredient(Items.GOLDEN_SWORD, 1)
                 .addIngredient(Items.DIAMOND_SWORD, 1)
                 .addIngredient(Items.NETHERITE_SWORD, 1)
-                .addCriterion("has_redstone", hasItem(Items.DIAMOND))
+                .addCriterion("has_base_module", hasItem(RegisterItems.BASE_MODULE_ITEM.get())) // レシピ解放？
                 .build(consumer);
 
 
