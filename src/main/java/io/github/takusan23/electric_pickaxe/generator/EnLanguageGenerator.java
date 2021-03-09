@@ -31,7 +31,16 @@ public class EnLanguageGenerator extends LanguageProvider {
         add("tooltip.installed_module", "Installed modules");
         add("tooltip.not_found_module", "No installed modules");
         add("tooltip.max_count", "Maximum loading capacity is 1");
-        add("tooltip.item_description","Shovel + Pickaxe + Axe");
-        add("tooltip.forge_energy","Forge Energy");
+        add("tooltip.item_description", "Shovel + Pickaxe + Axe");
+        add("tooltip.forge_energy", "Forge Energy");
+        add("tooltip.open_gui", "Right click to open the settings GUI");
+
+        // 設定画面の翻訳
+        add("screen.title", "Electric Pickaxe setting screen");
+        add("screen.enchant", "Silk touch, fortune switching");
+        add("screen.enchant_silk_touch", "SilkTouch");
+        add("screen.enchant_fortune", "Fortune");
+        add("screen.close", "Close");
+
     }
 }

@@ -7,3 +7,10 @@ Javaで記述して、`runData`を実行することでJSONを生成してくれ
 変更できたら、再度`runIntelljRuns`を実行
 
 あとなんか知らんけど、`Item.Properties()`のところ、最低限クリエイティブタブの設定をしないとぬるぽを吐く模様。
+
+## ローカライズした文字列を取得する方法
+ユーティリティクラスを用意しました。
+
+```java
+LocalizeString.getLocalizeString("screen.title") // 電動ツルハシの設定
+```

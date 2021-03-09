@@ -32,7 +32,15 @@ public class JaLanguageGenerator extends LanguageProvider {
         add("tooltip.installed_module", "インストール済みモジュール");
         add("tooltip.not_found_module", "インストール済みモジュールはありません");
         add("tooltip.max_count", "最大搭載量は1です");
-        add("tooltip.item_description","シャベル + ツルハシ + 斧");
-        add("tooltip.forge_energy","Forge Energy");
+        add("tooltip.item_description", "シャベル + ツルハシ + 斧");
+        add("tooltip.forge_energy", "Forge Energy");
+        add("tooltip.open_gui", "右クリックすると設定GUIが開きます");
+
+        // 設定画面の翻訳
+        add("screen.title", "電動ツルハシの設定");
+        add("screen.enchant", "シルクタッチ、幸運切り替え");
+        add("screen.enchant_silk_touch", "シルクタッチ");
+        add("screen.enchant_fortune", "幸運");
+        add("screen.close", "閉じる");
     }
 }

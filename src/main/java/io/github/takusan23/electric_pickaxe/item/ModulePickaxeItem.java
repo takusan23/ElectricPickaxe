@@ -3,6 +3,9 @@ package io.github.takusan23.electric_pickaxe.item;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import io.github.takusan23.electric_pickaxe.data.InstalledModule;
+import io.github.takusan23.electric_pickaxe.gui.ElectricPickaxeConfigScreen;
+import io.github.takusan23.electric_pickaxe.tool.LocalizeString;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -62,8 +65,8 @@ public class ModulePickaxeItem extends PickaxeItem {
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         ItemStack itemStack = playerIn.getHeldItem(handIn);
 
-        // エンチャントモジュール
-        changeSilkFortune(playerIn, itemStack);
+        // 右クリックなら設定画面GUI表示
+        Minecraft.getInstance().displayGuiScreen(new ElectricPickaxeConfigScreen(itemStack));
 
         return ActionResult.resultSuccess(itemStack);
     }
@@ -74,13 +77,13 @@ public class ModulePickaxeItem extends PickaxeItem {
      * hitEntityで呼んでな
      */
     public void rangeDamage(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        // レベル（範囲）
-        double rangeValue = getModuleLevel(stack, RegisterItems.RANGE_ATTACK_MODULE_ITEM.get().getRegistryNameString());
+        // レベル（範囲）。変更機能が提供されますので getModuleSettingInt を使います
+        double rangeValue = getModuleSettingInt(stack, RegisterItems.RANGE_ATTACK_MODULE_ITEM.get().getRegistryNameString());
         // インストール済みの場合のみ
         if (rangeValue > 0) {
             // PlayerEntity.java 参照
             float damage = getAttackDamageFromModuleLevel(stack);
-            for (LivingEntity livingentity : attacker.world.getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(rangeValue, 0.25D, rangeValue))) {
+            for (LivingEntity livingentity : attacker.world.getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(rangeValue / 2, 0.25D, rangeValue / 2))) {
                 // アーマースタンドを攻撃しないようになど
                 if (livingentity != target && !attacker.isOnSameTeam(livingentity) && (!(livingentity instanceof ArmorStandEntity) || !((ArmorStandEntity) livingentity).hasMarker())) {
                     // 敵対MOBのみ
@@ -98,22 +101,22 @@ public class ModulePickaxeItem extends PickaxeItem {
     /**
      * シルクタッチ、幸運エンチャントのモジュールを適用する
      */
-    private void changeSilkFortune(PlayerEntity playerEntity, ItemStack itemStack) {
+    public void changeSilkFortune(PlayerEntity playerEntity, ItemStack itemStack) {
         // モジュールがあるときのみ
         if (isCheckInstalledModule(itemStack, RegisterItems.SILK_TOUCH_FORTUNE_MODULE_ITEM.get().getRegistryNameString())) {
-            // しゃがんでいるとき
-            if (playerEntity.isSneaking()) {
-                // どっちのエンチャントがついているのか
-                boolean isSilkTouch = EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack) == 1;
-                // エンチャントをはがす
-                itemStack.removeChildTag("Enchantments");
-                if (isSilkTouch) {
-                    // Fortuneを付与
-                    itemStack.addEnchantment(Enchantments.FORTUNE, 3);
-                } else {
-                    // SilkTouchを付与
-                    itemStack.addEnchantment(Enchantments.SILK_TOUCH, 1);
-                }
+            // どっちのエンチャントがついているのか
+            boolean isSilkTouch = EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack) == 1;
+            // エンチャントをはがす
+            itemStack.removeChildTag("Enchantments");
+            if (isSilkTouch) {
+                // Fortuneを付与
+                itemStack.addEnchantment(Enchantments.FORTUNE, 3);
+                // メッセージ送出
+                playerEntity.sendStatusMessage(new StringTextComponent(LocalizeString.getLocalizeString("screen.enchant_fortune")), true);
+            } else {
+                // SilkTouchを付与
+                itemStack.addEnchantment(Enchantments.SILK_TOUCH, 1);
+                playerEntity.sendStatusMessage(new StringTextComponent(LocalizeString.getLocalizeString("screen.enchant_silk_touch")), true);
             }
         }
     }
@@ -127,6 +130,10 @@ public class ModulePickaxeItem extends PickaxeItem {
 
         // インストール済み配列
         List<InstalledModule> installedModuleList = getInstalledModuleList(stack);
+
+        // 右クリックしてGUI表示ってメッセージを
+        String localizeOpenGUI = getLocalizationText("tooltip.open_gui");
+        addToolTip(stack, worldIn, tooltip, flagIn, localizeOpenGUI, "#ffff8b");
 
         if (installedModuleList.isEmpty()) {
             // ない場合は無いって出す
@@ -199,6 +206,7 @@ public class ModulePickaxeItem extends PickaxeItem {
         List installedModuleList = compoundNBT.keySet()
                 .stream()
                 .filter(s -> s.contains("_module")) // moduleの文字列が含まれている
+                .filter(s -> !s.contains("_setting")) // モジュールの設定用NBTは入れない
                 .map(s -> new InstalledModule(s, compoundNBT.getInt(s))) // データクラスへ
                 .collect(Collectors.toList());
         return installedModuleList;
@@ -243,6 +251,8 @@ public class ModulePickaxeItem extends PickaxeItem {
 
     /**
      * 指定したモジュールのレベルを返す
+     * <p>
+     * なお、一部のモジュールには設定機能があり、制御できるようになっているので、getModuleSettingInt()も参照してね
      *
      * @param pickaxe            {@link ModulePickaxeItem}
      * @param moduleRegistryName 追加するモジュールのアイテムID
@@ -268,12 +278,61 @@ public class ModulePickaxeItem extends PickaxeItem {
     }
 
     /**
+     * 範囲攻撃モジュール等、モジュールの設定を保存するためのメソッド。インストール済みじゃないとだめ
+     * <p>
+     * NBTには、モジュール名_settingで保存される。
+     *
+     * @param itemStack          Electric Pickaxe
+     * @param moduleRegistryName モジュールのレジストリ名
+     * @param value              保存したい値
+     */
+    public void setModuleSettingInt(ItemStack itemStack, String moduleRegistryName, int value) {
+        // あるか
+        if (isCheckInstalledModule(itemStack, moduleRegistryName)) {
+            // 保存する
+            CompoundNBT compoundNBT = itemStack.getOrCreateTag();
+            compoundNBT.putInt(moduleRegistryName + "_setting", value);
+            // NBT再セット
+            itemStack.setTag(compoundNBT);
+        }
+    }
+
+    /**
+     * 範囲攻撃モジュール等、モジュールの設定を取得するためのメソッド。未保存ならモジュールのレベル getModuleLevel を返す
+     * <p>
+     * NBTの、モジュール名_settingの値を取りに行く
+     *
+     * @param itemStack          Electric Pickaxe
+     * @param moduleRegistryName モジュールのレジストリ名
+     */
+    public int getModuleSettingInt(ItemStack itemStack, String moduleRegistryName) {
+        // あるか
+        if (isCheckInstalledModule(itemStack, moduleRegistryName)) {
+            // 保存名
+            String keyName = moduleRegistryName + "_setting";
+            // 保存する
+            CompoundNBT compoundNBT = itemStack.getOrCreateTag();
+            if (compoundNBT.contains(keyName)) {
+                // 保存済み
+                return compoundNBT.getInt(moduleRegistryName + "_setting");
+            } else {
+                // 無ければモジュールのレベルを返す
+                return getModuleLevel(itemStack, moduleRegistryName);
+            }
+        } else {
+            // 未インストール
+            return 0;
+        }
+    }
+
+
+    /**
      * ローカライズテキストを返す
      *
      * @param localizeKey item.なんとか みたいな
      */
     public String getLocalizationText(String localizeKey) {
-        return new TranslationTextComponent(localizeKey).getString();
+        return LocalizeString.getLocalizeString(localizeKey);
     }
 
 }

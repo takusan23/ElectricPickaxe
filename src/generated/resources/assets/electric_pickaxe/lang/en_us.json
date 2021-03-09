@@ -6,9 +6,15 @@
   "item.electric_pickaxe.range_attack_module": "Range Attack Module",
   "item.electric_pickaxe.silk_touch_fortune_module": "SilkTouch Fortune Module",
   "itemGroup.electric_pickaxe_tab": "Electric Pickaxe",
+  "screen.close": "Close",
+  "screen.enchant": "Silk touch, fortune switching",
+  "screen.enchant_fortune": "Fortune",
+  "screen.enchant_silk_touch": "SilkTouch",
+  "screen.title": "Electric Pickaxe setting screen",
   "tooltip.forge_energy": "Forge Energy",
   "tooltip.installed_module": "Installed modules",
   "tooltip.item_description": "Shovel + Pickaxe + Axe",
   "tooltip.max_count": "Maximum loading capacity is 1",
-  "tooltip.not_found_module": "No installed modules"
+  "tooltip.not_found_module": "No installed modules",
+  "tooltip.open_gui": "Right click to open the settings GUI"
 }

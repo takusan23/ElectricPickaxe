@@ -61,17 +61,13 @@ public class ElectricPickaxeItem extends ModulePickaxeItem {
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         stack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
-            NumberFormat format = NumberFormat.getInstance();
             // ツールの説明
-            StringTextComponent toolDescriptionTextComponent = new StringTextComponent(getLocalizationText("tooltip.item_description"));
-            tooltip.add(toolDescriptionTextComponent);
+            addToolTip(stack, worldIn, tooltip, flagIn, getLocalizationText("tooltip.item_description"), "#ffffff");
 
             // 電池残量
             String localizeBatteryLevelText = getLocalizationText("tooltip.forge_energy");
             int percent = (int) ((cap.getEnergyStored() / (float) cap.getMaxEnergyStored()) * 100);
-            StringTextComponent batteryLevelTextComponent = new StringTextComponent(String.format("%s %d/%d (%d %%)", localizeBatteryLevelText, cap.getEnergyStored(), cap.getMaxEnergyStored(), percent));
-            batteryLevelTextComponent.setStyle(Style.EMPTY.setColor(Color.fromHex("#8cf4e2")));
-            tooltip.add(batteryLevelTextComponent);
+            addToolTip(stack, worldIn, tooltip, flagIn, String.format("%s %d/%d (%d %%)", localizeBatteryLevelText, cap.getEnergyStored(), cap.getMaxEnergyStored(), percent), "#8cf4e2");
         });
 
         // 継承元のメソッドを呼ぶ
