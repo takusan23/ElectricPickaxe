@@ -32,7 +32,10 @@ public class RegisterRecipe {
      */
     public static final RegistryObject<SpecialRecipeSerializer<ModuleRecipe>> CRAFTING_MODULE_RECIPE = CRAFTS.register("module_recipe", () -> new SpecialRecipeSerializer<>(ModuleRecipe::new));
 
-    public static void register(IEventBus modEventBus) {
+    /**
+     * {@link ElectricPickaxe}で呼んで使う
+     * */
+    public static void register() {
         CRAFTS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 

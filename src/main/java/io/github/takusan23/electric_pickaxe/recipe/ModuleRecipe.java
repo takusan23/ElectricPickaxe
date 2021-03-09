@@ -1,22 +1,16 @@
 package io.github.takusan23.electric_pickaxe.recipe;
 
-import io.github.takusan23.electric_pickaxe.item.BaseModuleItem;
-import io.github.takusan23.electric_pickaxe.item.RegisterItems;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
+import io.github.takusan23.electric_pickaxe.recipe.module_recipe.DamageUpgradeModuleRecipe;
+import io.github.takusan23.electric_pickaxe.recipe.module_recipe.SilkTouchFortuneModuleRecipe;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.SpecialRecipe;
-import net.minecraft.potion.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import org.jline.builtins.TTop;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 一部のモジュールのレシピをはNBTに依存してるので自前でコードを書く。
@@ -25,63 +19,42 @@ import java.util.stream.Collectors;
  */
 public class ModuleRecipe extends SpecialRecipe {
 
+    /**
+     * シルクタッチ、幸運モジュールのレシピ関係のクラス（完成品を返すメソッドとかがある）
+     */
+    public static final SilkTouchFortuneModuleRecipe SILK_TOUCH_FORTUNE_MODULE_RECIPE = new SilkTouchFortuneModuleRecipe();
+
+    /**
+     * 攻撃力上昇モジュールのレシピ関係のクラス
+     */
+    public static final DamageUpgradeModuleRecipe DAMAGE_UPGRADE_MODULE_RECIPE = new DamageUpgradeModuleRecipe();
+
     public ModuleRecipe(ResourceLocation idIn) {
         super(idIn);
     }
 
     /**
-     * とりあえず {@link BaseModuleItem} があればおｋ
+     * クラフト可能かどうかを返す
      */
     @Override
     public boolean matches(CraftingInventory inv, World worldIn) {
-        boolean hasModule = false;
-
         // モジュール以外のアイテム
         ArrayList<ItemStack> craftingItemList = new ArrayList<>();
 
         for (int j = 0; j < inv.getSizeInventory(); ++j) {
             ItemStack itemstack1 = inv.getStackInSlot(j);
-            if (!itemstack1.isEmpty()) {
-                if (itemstack1.getItem() == RegisterItems.BASE_MODULE_ITEM.get()) {
-                    hasModule = true;
-                }
-                if (itemstack1.getItem() != Items.AIR) {
-                    craftingItemList.add(itemstack1);
-                }
+            if (itemstack1.getItem() != Items.AIR) {
+                craftingItemList.add(itemstack1);
             }
         }
 
-        // 無ければreturn
-        if (!hasModule || craftingItemList.isEmpty()) return false;
-
-        boolean hasSilkTouch = false;
-        boolean hasFortune = false;
-        // 幸運とシルクタッチがあれば
-        for (ItemStack itemStack : craftingItemList) {
-            if (EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack) == 1) {
-                hasSilkTouch = true;
-            }
-            if (EnchantmentHelper.getEnchantmentLevel(Enchantments.FORTUNE, itemStack) == 3) {
-                hasFortune = true;
-            }
-        }
-        // シルクタッチ、幸運モジュールがある場合
-        if (hasSilkTouch && hasFortune) {
+        // シルクタッチ、幸運モジュールが作成可能なら
+        if (SILK_TOUCH_FORTUNE_MODULE_RECIPE.match(craftingItemList)) {
             return true;
         }
 
-        // 攻撃力上昇ポーションを三つあれば作成可能
-        int potionCount = 0;
-        for (ItemStack itemStack : craftingItemList) {
-            List<EffectInstance> potionEffect = PotionUtils.getEffectsFromStack(itemStack);
-            for (EffectInstance effect : potionEffect) {
-                if (effect.getPotion() == Effects.STRENGTH) {
-                    potionCount++;
-                }
-            }
-        }
-        // 攻撃力上昇モジュールを返す
-        if (potionCount == 3) {
+        // 攻撃力上昇ポーションが三つあるか
+        if (DAMAGE_UPGRADE_MODULE_RECIPE.match(craftingItemList)) {
             return true;
         }
 
@@ -94,56 +67,25 @@ public class ModuleRecipe extends SpecialRecipe {
     @Override
     public ItemStack getCraftingResult(CraftingInventory inv) {
 
-        ItemStack moduleItem = null;
         // モジュール以外のアイテム
         ArrayList<ItemStack> craftingItemList = new ArrayList<>();
 
-        // ElectricPickaxeとモジュールを見つける
-        for (int i = 0; i < inv.getSizeInventory(); i++) {
-            ItemStack itemStack = inv.getStackInSlot(i);
-            if (itemStack.getItem() == RegisterItems.BASE_MODULE_ITEM.get()) {
-                moduleItem = itemStack;
-            }
-            if (itemStack.getItem() != Items.AIR) {
-                craftingItemList.add(itemStack);
+        for (int j = 0; j < inv.getSizeInventory(); ++j) {
+            ItemStack itemstack1 = inv.getStackInSlot(j);
+            if (itemstack1.getItem() != Items.AIR) {
+                craftingItemList.add(itemstack1);
             }
         }
 
-        // 無ければreturn
-        if (moduleItem == null || craftingItemList.isEmpty()) return ItemStack.EMPTY;
-
-        boolean hasSilkTouch = false;
-        boolean hasFortune = false;
-        // 幸運とシルクタッチがあれば
-        for (ItemStack itemStack : craftingItemList) {
-            if (EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack) == 1) {
-                hasSilkTouch = true;
-            }
-            if (EnchantmentHelper.getEnchantmentLevel(Enchantments.FORTUNE, itemStack) == 3) {
-                hasFortune = true;
-            }
-        }
-        // シルクタッチ、幸運モジュールを返す
-        if (hasSilkTouch && hasFortune) {
-            return new ItemStack(RegisterItems.SILK_TOUCH_FORTUNE_MODULE_ITEM.get());
+        // シルクタッチ、幸運モジュールが作成可能なら
+        if (SILK_TOUCH_FORTUNE_MODULE_RECIPE.match(craftingItemList)) {
+            return SILK_TOUCH_FORTUNE_MODULE_RECIPE.getResultItem();
         }
 
-
-        // 攻撃力上昇ポーションを三つあれば作成可能
-        int potionCount = 0;
-        for (ItemStack itemStack : craftingItemList) {
-            List<EffectInstance> potionEffect = PotionUtils.getEffectsFromStack(itemStack);
-            for (EffectInstance effect : potionEffect) {
-                if (effect.getPotion() == Effects.STRENGTH) {
-                    potionCount++;
-                }
-            }
+        // 攻撃力上昇ポーションを三つあるか
+        if (DAMAGE_UPGRADE_MODULE_RECIPE.match(craftingItemList)) {
+            return DAMAGE_UPGRADE_MODULE_RECIPE.getResultItem();
         }
-        // 攻撃力上昇モジュールを返す
-        if (potionCount == 3) {
-            return new ItemStack(RegisterItems.DAMAGE_UPGRADE_MODULE_ITEM.get());
-        }
-
 
         return ItemStack.EMPTY;
     }

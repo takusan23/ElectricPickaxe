@@ -30,7 +30,7 @@ public class ElectricPickaxe {
         // アイテム登録
         RegisterItems.register(modEventBus);
         // レシピシステム登録。NBTタグを扱うため
-        RegisterRecipe.register(modEventBus);
+        RegisterRecipe.register();
         // JSONファイルを生成するなにか
         modEventBus.addListener(this::registerProviders);
 
