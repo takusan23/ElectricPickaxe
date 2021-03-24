@@ -64,7 +64,6 @@ public class RecipeGenerator extends RecipeProvider {
                 .addIngredient(Items.IRON_SWORD, 1)
                 .addIngredient(Items.GOLDEN_SWORD, 1)
                 .addIngredient(Items.DIAMOND_SWORD, 1)
-                .addIngredient(Items.NETHERITE_SWORD, 1)
                 .addCriterion("has_base_module", hasItem(RegisterItems.BASE_MODULE_ITEM.get())) // レシピ解放？
                 .build(consumer);
 

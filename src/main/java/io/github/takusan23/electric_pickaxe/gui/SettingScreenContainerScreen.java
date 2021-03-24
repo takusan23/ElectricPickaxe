@@ -5,34 +5,41 @@ import io.github.takusan23.electric_pickaxe.item.ModulePickaxeItem;
 import io.github.takusan23.electric_pickaxe.item.RegisterItems;
 import io.github.takusan23.electric_pickaxe.tool.LocalizeString;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.net.CacheRequest;
-
 /**
  * {@link io.github.takusan23.electric_pickaxe.ElectricPickaxe}の設定画面
  * <p>
  * 範囲攻撃やシルクタッチモジュール切り替えなど
+ * <p>
+ * Forgeに登録する際はクライアント側のみ登録して
+ * <p>
+ * AndroidでいうとActivityみたいな（ViewModelがデータ担当）
  */
 @OnlyIn(Dist.CLIENT)
-public class ElectricPickaxeConfigScreen extends Screen {
+public class SettingScreenContainerScreen extends ContainerScreen<SettingScreenContainer> {
 
     /**
-     * ModuleItemPickaxeのItemStack
+     * ElectricPickaxeはこのクラス経由で取得できます。
      */
-    private ItemStack modulePickaxeItemStack = null;
+    private SettingScreenContainer container;
 
     /**
-     * modulePickaxeItemStackからItemを取り出した
+     * ModulePickaxeItemのItemStack
      */
-    private ModulePickaxeItem modulePickaxeItem = null;
+    private ItemStack modulePickaxeItemStack;
+
+    /**
+     * ModulePickaxeItem。Electric Pickaxeの継承元
+     */
+    private ModulePickaxeItem modulePickaxeItem;
 
     /**
      * 範囲攻撃モジュールのボタンの位置。テキスト表示と位置を合わせるため
@@ -40,25 +47,21 @@ public class ElectricPickaxeConfigScreen extends Screen {
     private int rangeButtonYPos = 0;
 
     /**
-     * @param itemStack {@link ModulePickaxeItem}のItemStackにしてください。
+     * 登録時に使うコンストラクタ
      */
-    public ElectricPickaxeConfigScreen(ItemStack itemStack) {
-        super(new StringTextComponent(LocalizeString.getLocalizeString("screen.title"))); // タイトル
-        modulePickaxeItemStack = itemStack;
+    public SettingScreenContainerScreen(SettingScreenContainer screenContainer, PlayerInventory inv, ITextComponent titleIn) {
+        super(screenContainer, inv, titleIn);
+        container = screenContainer;
+        modulePickaxeItemStack = container.getModulePickaxeItemStack();
         modulePickaxeItem = (ModulePickaxeItem) modulePickaxeItemStack.getItem();
     }
 
-    protected ElectricPickaxeConfigScreen(ITextComponent titleIn) {
-        super(titleIn);
-    }
-
     /**
-     * ボタンはここで描画するらしい
+     * ボタンの配置
      */
     @Override
     protected void init() {
         super.init();
-
         int buttonYPos = 40;
 
         // エンチャント切り替えボタン
@@ -78,23 +81,16 @@ public class ElectricPickaxeConfigScreen extends Screen {
     }
 
     /**
-     * 閉じるボタンを追加
+     * GUIのインベントリの文字を消すため。super()消せば継承元が呼ばれなくなる
      */
-    private void addCloseButton() {
-        int backButtonWidth = width / 2;
-        this.addButton(new Button((width - backButtonWidth) / 2, height - 30, backButtonWidth, 20, new StringTextComponent(LocalizeString.getLocalizeString("screen.close")), p_onPress_1_ -> {
-            closeScreen();
-        }));
+    @Override
+    protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
+
     }
 
-    /**
-     * エンチャント切り替えボタンを追加
-     */
-    private void addEnchantButton(int top) {
-        int enchantButtonWidth = width / 2;
-        addButton(new Button((width - enchantButtonWidth) / 2, top, enchantButtonWidth, 20, new StringTextComponent(LocalizeString.getLocalizeString("screen.enchant")), p_onPress_1_ -> {
-            modulePickaxeItem.changeSilkFortune(Minecraft.getInstance().player, modulePickaxeItemStack);
-        }));
+    @Override
+    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+        // テクスチャの画像を張るなりしてね
     }
 
     /**
@@ -118,6 +114,8 @@ public class ElectricPickaxeConfigScreen extends Screen {
             if (0 < versionDown && versionDown <= maxValue) {
                 modulePickaxeItem.setModuleSettingInt(modulePickaxeItemStack, registryName, versionDown);
             }
+            // サーバーと同期
+            container.syncServer(modulePickaxeItemStack);
         }));
         // 真ん中にスペースを
         rangeButtonXPos += rangeButtonWidth + rangeButtonWidth;
@@ -131,6 +129,39 @@ public class ElectricPickaxeConfigScreen extends Screen {
             if (0 < versionUp && versionUp <= maxValue) {
                 modulePickaxeItem.setModuleSettingInt(modulePickaxeItemStack, registryName, versionUp);
             }
+            // サーバーと同期
+            container.syncServer(modulePickaxeItemStack);
+        }));
+    }
+
+    /**
+     * エンチャント切り替えボタンを追加
+     */
+    private void addEnchantButton(int top) {
+        int enchantButtonWidth = width / 2;
+        addButton(new Button((width - enchantButtonWidth) / 2, top, enchantButtonWidth, 20, new StringTextComponent(LocalizeString.getLocalizeString("screen.enchant")), p_onPress_1_ -> {
+            modulePickaxeItem.changeSilkFortune(Minecraft.getInstance().player, modulePickaxeItemStack);
+            // サーバーと同期
+            container.syncServer(modulePickaxeItemStack);
+        }));
+    }
+
+    /**
+     * モジュールがインストール済みかどうか
+     *
+     * @param registryName モジュールのレジストリ名
+     */
+    private boolean isCheckInstalledModule(String registryName) {
+        return modulePickaxeItem.isCheckInstalledModule(modulePickaxeItemStack, registryName);
+    }
+
+    /**
+     * 閉じるボタンを追加
+     */
+    private void addCloseButton() {
+        int backButtonWidth = width / 3;
+        this.addButton(new Button((width - backButtonWidth) / 2, height - 30, backButtonWidth, 20, new StringTextComponent(LocalizeString.getLocalizeString("screen.close")), p_onPress_1_ -> {
+            closeScreen();
         }));
     }
 
@@ -155,15 +186,4 @@ public class ElectricPickaxeConfigScreen extends Screen {
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
-
-    /**
-     * モジュールがインストール済みかどうか
-     *
-     * @param registryName モジュールのレジストリ名
-     */
-    private boolean isCheckInstalledModule(String registryName) {
-        return modulePickaxeItem.isCheckInstalledModule(modulePickaxeItemStack, registryName);
-    }
-
-
 }

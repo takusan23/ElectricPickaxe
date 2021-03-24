@@ -3,9 +3,8 @@ package io.github.takusan23.electric_pickaxe.item;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import io.github.takusan23.electric_pickaxe.data.InstalledModule;
-import io.github.takusan23.electric_pickaxe.gui.ElectricPickaxeConfigScreen;
+import io.github.takusan23.electric_pickaxe.gui.SettingScreenContainer;
 import io.github.takusan23.electric_pickaxe.tool.LocalizeString;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -18,6 +17,8 @@ import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
@@ -65,8 +66,10 @@ public class ModulePickaxeItem extends PickaxeItem {
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         ItemStack itemStack = playerIn.getHeldItem(handIn);
 
-        // 右クリックなら設定画面GUI表示
-        Minecraft.getInstance().displayGuiScreen(new ElectricPickaxeConfigScreen(itemStack));
+        // 右クリックなら設定画面GUI表示。ただしクライアントのみ
+        if (!worldIn.isRemote) {
+            playerIn.openContainer(getContainer());
+        }
 
         return ActionResult.resultSuccess(itemStack);
     }
@@ -335,4 +338,13 @@ public class ModulePickaxeItem extends PickaxeItem {
         return LocalizeString.getLocalizeString(localizeKey);
     }
 
+    /**
+     * GUI表示で使うなにか。
+     */
+    @Nullable
+    public INamedContainerProvider getContainer() {
+        return new SimpleNamedContainerProvider((id, inventory, player) -> {
+           return new SettingScreenContainer(id, inventory);
+        }, new TranslationTextComponent("screen.title"));
+    }
 }
